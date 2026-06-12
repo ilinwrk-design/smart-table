@@ -1,34 +1,36 @@
-import './fonts/ys-display/fonts.css'
-import './style.css'
+import './fonts/ys-display/fonts.css';
+import './style.css';
 
-import {data as sourceData} from "./data/dataset_1.js";
+import { data as sourceData } from "./data/dataset_1.js";
 
-import {initData} from "./data.js";
-import {processFormData} from "./lib/utils.js";
+import { initData } from "./data.js";
+import { processFormData } from "./lib/utils.js";
 
-import {initTable} from "./components/table.js";
+import { initTable } from "./components/table.js";
+
 // @todo: подключение
-
-// Подключаем модуль пагинации
-import {initPagination} from "./components/pagination.js";
+import { initPagination } from "./components/pagination.js";
+import { initSorting } from "./components/sorting.js";
 
 
 // Исходные данные используемые в render()
-const {data, ...indexes} = initData(sourceData);
+const { data, ...indexes } = initData(sourceData);
 
 /**
  * Сбор и обработка полей из таблицы
  * @returns {Object}
  */
 function collectState() {
-    const state = processFormData(new FormData(sampleTable.container));
+    const state = processFormData(
+        new FormData(sampleTable.container)
+    );
 
-    // rowsPerPage приходит из формы строкой, например "10"
-    // приводим к числу, чтобы потом можно было делать математические расчёты
+    // Количество строк на странице приходит строкой,
+    // преобразуем в число
     const rowsPerPage = parseInt(state.rowsPerPage);
 
-    // page тоже приходит строкой
-    // если страницы ещё нет, используем 1 по умолчанию
+    // Номер страницы тоже приводим к числу
+    // По умолчанию используем первую страницу
     const page = parseInt(state.page ?? 1);
 
     return {
@@ -43,46 +45,59 @@ function collectState() {
  * @param {HTMLButtonElement?} action
  */
 function render(action) {
-    let state = collectState(); // состояние полей из таблицы
-    let result = [...data]; // копируем для последующего изменения
+    // Состояние всех элементов формы
+    let state = collectState();
+
+    // Копируем исходные данные
+    let result = [...data];
 
     // @todo: использование
 
-    // Применяем пагинацию:
-    // берём все данные, состояние формы и кнопку действия, если она была
+    // Сначала сортируем весь массив
+    result = applySorting(result, state, action);
+
+    // Потом применяем пагинацию
     result = applyPagination(result, state, action);
 
-    sampleTable.render(result)
+    // Выводим результат в таблицу
+    sampleTable.render(result);
 }
 
 const sampleTable = initTable({
     tableTemplate: 'table',
     rowTemplate: 'row',
-    before: [],
 
-    // Добавляем шаблон пагинации после таблицы
+    // Шаблон заголовка с кнопками сортировки
+    before: ['header'],
+
+    // Шаблон пагинации под таблицей
     after: ['pagination']
 }, render);
 
 // @todo: инициализация
 
-// Инициализируем модуль пагинации
-// sampleTable.pagination.elements — элементы из шаблона пагинации
+// Модуль сортировки
+const applySorting = initSorting([
+    sampleTable.header.elements.sortByDate,
+    sampleTable.header.elements.sortByTotal
+]);
+
+// Модуль пагинации
 const applyPagination = initPagination(
     sampleTable.pagination.elements,
 
-    // Колбэк, который настраивает одну кнопку страницы
+    // Колбэк для создания кнопки страницы
     (el, page, isCurrent) => {
         const input = el.querySelector('input');
         const label = el.querySelector('span');
 
-        // Значение radio-кнопки
+        // Номер страницы
         input.value = page;
 
-        // Отмечаем текущую страницу
+        // Текущая страница отмечается radio-кнопкой
         input.checked = isCurrent;
 
-        // Показываем номер страницы пользователю
+        // Выводим номер страницы
         label.textContent = page;
 
         return el;
@@ -90,6 +105,9 @@ const applyPagination = initPagination(
 );
 
 const appRoot = document.querySelector('#app');
+
+// Добавляем таблицу в приложение
 appRoot.appendChild(sampleTable.container);
 
+// Первый рендер страницы
 render();
