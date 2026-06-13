@@ -12,6 +12,7 @@ import { initTable } from "./components/table.js";
 import { initPagination } from "./components/pagination.js";
 import { initSorting } from "./components/sorting.js";
 import { initFiltering } from "./components/filtering.js";
+import { initSearching } from "./components/searching.js";
 
 
 // Исходные данные используемые в render()
@@ -26,12 +27,10 @@ function collectState() {
         new FormData(sampleTable.container)
     );
 
-    // Количество строк на странице приходит строкой,
-    // преобразуем к числу
+    // Количество строк на странице приходит строкой
     const rowsPerPage = parseInt(state.rowsPerPage);
 
     // Номер страницы тоже приводим к числу
-    // Если страница не выбрана — используем первую
     const page = parseInt(state.page ?? 1);
 
     return {
@@ -49,21 +48,24 @@ function render(action) {
     // Собираем текущее состояние формы
     let state = collectState();
 
-    // Работаем с копией исходного массива
+    // Работаем с копией исходных данных
     let result = [...data];
 
     // @todo: использование
 
-    // Сначала фильтрация
+    // Поиск по нескольким полям
+    result = applySearching(result, state, action);
+
+    // Фильтрация
     result = applyFiltering(result, state, action);
 
-    // Потом сортировка
+    // Сортировка
     result = applySorting(result, state, action);
 
-    // Потом пагинация
+    // Пагинация
     result = applyPagination(result, state, action);
 
-    // Выводим итоговые данные
+    // Отрисовка результата
     sampleTable.render(result);
 }
 
@@ -71,32 +73,41 @@ const sampleTable = initTable({
     tableTemplate: 'table',
     rowTemplate: 'row',
 
-    // Сначала выводим заголовок с сортировками,
-    // затем блок фильтров
-    before: ['header', 'filter'],
+    // Сначала поиск,
+    // затем сортировка,
+    // затем фильтры
+    before: [
+        'search',
+        'header',
+        'filter'
+    ],
 
     // После таблицы выводим пагинацию
-    after: ['pagination']
+    after: [
+        'pagination'
+    ]
 }, render);
 
 // @todo: инициализация
 
-// Инициализация фильтрации
+// Поиск
+const applySearching = initSearching('search');
+
+// Фильтрация
 const applyFiltering = initFiltering(
     sampleTable.filter.elements,
     {
-        // Заполняем список продавцов
         searchBySeller: indexes.sellers
     }
 );
 
-// Инициализация сортировки
+// Сортировка
 const applySorting = initSorting([
     sampleTable.header.elements.sortByDate,
     sampleTable.header.elements.sortByTotal
 ]);
 
-// Инициализация пагинации
+// Пагинация
 const applyPagination = initPagination(
     sampleTable.pagination.elements,
 
@@ -105,7 +116,7 @@ const applyPagination = initPagination(
         const input = el.querySelector('input');
         const label = el.querySelector('span');
 
-        // Номер страницы
+        // Значение radio-кнопки
         input.value = page;
 
         // Активная страница
@@ -120,8 +131,8 @@ const applyPagination = initPagination(
 
 const appRoot = document.querySelector('#app');
 
-// Добавляем таблицу на страницу
+// Добавляем таблицу в DOM
 appRoot.appendChild(sampleTable.container);
 
-// Первый рендер
+// Первая отрисовка
 render();
