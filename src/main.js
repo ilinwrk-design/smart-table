@@ -27,16 +27,27 @@ function collectState() {
         new FormData(sampleTable.container)
     );
 
-    // Количество строк на странице приходит строкой
     const rowsPerPage = parseInt(state.rowsPerPage);
-
-    // Номер страницы тоже приводим к числу
     const page = parseInt(state.page ?? 1);
+
+    // Фильтр "сумма от"
+    // Если поле пустое, оставляем пустую строку
+    const totalFrom = state.totalFrom
+        ? parseFloat(state.totalFrom)
+        : '';
+
+    // Фильтр "сумма до"
+    // Если поле пустое, оставляем пустую строку
+    const totalTo = state.totalTo
+        ? parseFloat(state.totalTo)
+        : '';
 
     return {
         ...state,
         rowsPerPage,
-        page
+        page,
+        totalFrom,
+        totalTo
     };
 }
 
