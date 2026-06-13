@@ -2,6 +2,7 @@ import {createComparison, defaultRules} from "../lib/compare.js";
 
 // @todo: #4.3 — настроить компаратор
 
+// Базовый компаратор из правил проекта
 const compare = createComparison(defaultRules);
 
 export function initFiltering(elements, indexes) {
@@ -39,6 +40,34 @@ export function initFiltering(elements, indexes) {
 
         // @todo: #4.5 — отфильтровать данные используя компаратор
 
-        return data.filter(row => compare(row, state));
+        return data.filter((row) => {
+            // Сначала применяем стандартные правила фильтрации
+            const isMatchedByDefaultRules = compare(row, state);
+
+            // Значение суммы в строке таблицы
+            const total = Number(row.total);
+
+            // Нижняя граница суммы
+            const totalFrom = state.totalFrom
+                ? Number(state.totalFrom)
+                : null;
+
+            // Верхняя граница суммы
+            const totalTo = state.totalTo
+                ? Number(state.totalTo)
+                : null;
+
+            // Проверяем totalFrom
+            if (totalFrom !== null && total < totalFrom) {
+                return false;
+            }
+
+            // Проверяем totalTo
+            if (totalTo !== null && total > totalTo) {
+                return false;
+            }
+
+            return isMatchedByDefaultRules;
+        });
     }
 }

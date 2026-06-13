@@ -30,16 +30,12 @@ function collectState() {
     const rowsPerPage = parseInt(state.rowsPerPage);
     const page = parseInt(state.page ?? 1);
 
-    // Фильтр "сумма от"
-    // Если поле пустое, оставляем пустую строку
     const totalFrom = state.totalFrom
-        ? parseFloat(state.totalFrom)
+        ? Number(state.totalFrom)
         : '';
 
-    // Фильтр "сумма до"
-    // Если поле пустое, оставляем пустую строку
     const totalTo = state.totalTo
-        ? parseFloat(state.totalTo)
+        ? Number(state.totalTo)
         : '';
 
     return {
